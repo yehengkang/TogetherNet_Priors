@@ -1,18 +1,32 @@
 import torch
+import torch.distributed as dist
 from tqdm import tqdm
 import torch.nn as nn
 
 from utils.utils import get_lr
-        
-def fit_one_epoch(model_train, model, yolo_loss, loss_history, optimizer, epoch, epoch_step, epoch_step_val, gen, gen_val, Epoch, cuda, save_period):
+
+
+def reduce_tensor(tensor):
+    """All-reduce tensor across processes (used in DDP)."""
+    if not dist.is_available() or not dist.is_initialized():
+        return tensor
+    rt = tensor.clone()
+    dist.all_reduce(rt, op=dist.ReduceOp.SUM)
+    rt /= dist.get_world_size()
+    return rt
+
+
+def fit_one_epoch(model_train, model, yolo_loss, loss_history, optimizer, epoch, epoch_step, epoch_step_val, gen, gen_val, Epoch, cuda, save_period, local_rank=0):
     loss        = 0
     val_loss    = 0
     Dehazy_loss = 0
     criterion = nn.MSELoss()
+    is_main   = (local_rank in [-1, 0])
 
     model_train.train()
-    print('Start Train')
-    with tqdm(total=epoch_step,desc=f'Epoch {epoch + 1}/{Epoch}',postfix=dict,mininterval=0.3) as pbar:
+    if is_main:
+        print('Start Train')
+    with tqdm(total=epoch_step, desc=f'Epoch {epoch + 1}/{Epoch}', postfix=dict, mininterval=0.3, disable=not is_main) as pbar:
         for iteration, batch in enumerate(gen):
             if iteration >= epoch_step:
                 break
@@ -55,11 +69,13 @@ def fit_one_epoch(model_train, model, yolo_loss, loss_history, optimizer, epoch,
                                 'lr'    : get_lr(optimizer)})
             pbar.update(1)
 
-    print('Finish Train')
+    if is_main:
+        print('Finish Train')
 
     model_train.eval()
-    print('Start Validation')
-    with tqdm(total=epoch_step_val, desc=f'Epoch {epoch + 1}/{Epoch}',postfix=dict,mininterval=0.3) as pbar:
+    if is_main:
+        print('Start Validation')
+    with tqdm(total=epoch_step_val, desc=f'Epoch {epoch + 1}/{Epoch}', postfix=dict, mininterval=0.3, disable=not is_main) as pbar:
         for iteration, batch in enumerate(gen_val):
             if iteration >= epoch_step_val:
                 break
@@ -87,10 +103,23 @@ def fit_one_epoch(model_train, model, yolo_loss, loss_history, optimizer, epoch,
             pbar.set_postfix(**{'val_loss': val_loss / (iteration + 1)})
             pbar.update(1)
 
-    print('Finish Validation')
-    
-    loss_history.append_loss(epoch + 1, loss / epoch_step, val_loss / epoch_step_val)
-    print('Epoch:'+ str(epoch + 1) + '/' + str(Epoch))
-    print('Total Loss: %.3f || Val Loss: %.3f ' % (loss / epoch_step, val_loss / epoch_step_val))
-    if (epoch + 1) % save_period == 0 or epoch + 1 == Epoch:
-        torch.save(model.state_dict(), 'logs/ep%03d-loss%.3f-val_loss%.3f.pth' % (epoch + 1, loss / epoch_step, val_loss / epoch_step_val))
+    if is_main:
+        print('Finish Validation')
+
+    # Aggregate losses across ranks for consistent logging in DDP.
+    if cuda:
+        avg_loss      = reduce_tensor(torch.tensor(loss / epoch_step, dtype=torch.float32).cuda()).item()
+        avg_dehazy    = reduce_tensor(torch.tensor(Dehazy_loss / epoch_step, dtype=torch.float32).cuda()).item()
+        avg_val_loss  = reduce_tensor(torch.tensor(val_loss / epoch_step_val, dtype=torch.float32).cuda()).item() if epoch_step_val > 0 else 0.0
+    else:
+        avg_loss      = loss / epoch_step
+        avg_dehazy    = Dehazy_loss / epoch_step
+        avg_val_loss  = val_loss / epoch_step_val if epoch_step_val > 0 else 0.0
+
+    if is_main:
+        if loss_history is not None:
+            loss_history.append_loss(epoch + 1, avg_loss, avg_val_loss)
+        print('Epoch:'+ str(epoch + 1) + '/' + str(Epoch))
+        print('Total Loss: %.3f || Dehazy Loss: %.3f || Val Loss: %.3f ' % (avg_loss, avg_dehazy, avg_val_loss))
+        if (epoch + 1) % save_period == 0 or epoch + 1 == Epoch:
+            torch.save(model.state_dict(), 'logs/ep%03d-loss%.3f-val_loss%.3f.pth' % (epoch + 1, avg_loss, avg_val_loss))

@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: nets
+title: YOLOX 目标检测与去雾联合网络
+scope:
+    - nets/
+source_files: []
+depends_on: []
+related_to:
+    - path: evaluation_and_tools
+    - path: training_and_prediction

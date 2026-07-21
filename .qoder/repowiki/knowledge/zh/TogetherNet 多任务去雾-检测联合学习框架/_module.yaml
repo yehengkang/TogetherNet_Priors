@@ -1,0 +1,15 @@
+schema_version: 1
+module_path: ""
+title: TogetherNet 多任务去雾-检测联合学习框架
+scope:
+    - README.md
+    - requirements.txt
+    - 2007_train.txt
+    - 2007_train_fog.txt
+    - 2007_val.txt
+    - 2007_val_fog.txt
+    - LICENSE
+    - voc_annotation.py
+source_files: []
+depends_on: []
+related_to: []

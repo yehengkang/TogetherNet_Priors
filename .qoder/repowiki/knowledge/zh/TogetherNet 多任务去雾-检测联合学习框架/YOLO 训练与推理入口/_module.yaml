@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: training_and_prediction
+title: YOLO 训练与推理入口
+scope:
+    - train.py
+    - predict.py
+    - yolo.py
+source_files: []
+depends_on: []
+related_to:
+    - path: nets
+    - path: utils

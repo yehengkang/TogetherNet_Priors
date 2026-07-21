@@ -1,0 +1,88 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: main
+nodes_managed: true
+exported_at: "2026-07-21T04:04:58Z"
+modules:
+    "":
+        dir_name: TogetherNet 多任务去雾-检测联合学习框架
+        title: TogetherNet 多任务去雾-检测联合学习框架
+        scope:
+            - README.md
+            - requirements.txt
+            - 2007_train.txt
+            - 2007_train_fog.txt
+            - 2007_val.txt
+            - 2007_val_fog.txt
+            - LICENSE
+            - voc_annotation.py
+        source_files: []
+        children:
+            - assets_and_data
+            - evaluation_and_tools
+            - nets
+            - training_and_prediction
+            - utils
+        depends_on: []
+        related_to: []
+    assets_and_data:
+        dir_name: 模型类别与示例图像数据
+        title: 模型类别与示例图像数据
+        scope:
+            - model_data/
+            - img/
+            - img_out/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    evaluation_and_tools:
+        dir_name: YOLO 评估与辅助工具脚本
+        title: YOLO 评估与辅助工具脚本
+        scope:
+            - get_map.py
+            - summary.py
+            - get_testName.py
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: nets
+            - path: utils
+    nets:
+        dir_name: YOLOX 目标检测与去雾联合网络
+        title: YOLOX 目标检测与去雾联合网络
+        scope:
+            - nets/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: evaluation_and_tools
+            - path: training_and_prediction
+    training_and_prediction:
+        dir_name: YOLO 训练与推理入口
+        title: YOLO 训练与推理入口
+        scope:
+            - train.py
+            - predict.py
+            - yolo.py
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: nets
+            - path: utils
+    utils:
+        dir_name: YOLO 训练_推理通用工具集
+        title: YOLO 训练/推理通用工具集
+        scope:
+            - utils/
+            - utils_coco/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: evaluation_and_tools
+            - path: training_and_prediction

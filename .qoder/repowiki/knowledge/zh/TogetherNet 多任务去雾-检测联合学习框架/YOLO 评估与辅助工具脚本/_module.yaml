@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: evaluation_and_tools
+title: YOLO 评估与辅助工具脚本
+scope:
+    - get_map.py
+    - summary.py
+    - get_testName.py
+source_files: []
+depends_on: []
+related_to:
+    - path: nets
+    - path: utils

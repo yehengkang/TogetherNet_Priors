@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: assets_and_data
+title: 模型类别与示例图像数据
+scope:
+    - model_data/
+    - img/
+    - img_out/
+source_files: []
+depends_on: []
+related_to: []

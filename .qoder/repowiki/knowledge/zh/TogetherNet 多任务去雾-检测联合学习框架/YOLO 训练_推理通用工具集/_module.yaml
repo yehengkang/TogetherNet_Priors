@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: utils
+title: YOLO 训练/推理通用工具集
+scope:
+    - utils/
+    - utils_coco/
+source_files: []
+depends_on: []
+related_to:
+    - path: evaluation_and_tools
+    - path: training_and_prediction
