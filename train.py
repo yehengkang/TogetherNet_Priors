@@ -18,7 +18,7 @@ from utils.dataloader import YoloDataset, yolo_dataset_collate
 from utils.utils import get_classes
 from utils.utils_fit import fit_one_epoch
 
-
+# 这是第一次提交的修改
 def init_distributed(local_rank):
     """Initialize distributed training."""
     torch.cuda.set_device(local_rank)
